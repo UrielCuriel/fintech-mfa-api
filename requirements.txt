@@ -5,3 +5,4 @@ databases
 sqlalchemy
 pydantic
 asyncpg
+pytest

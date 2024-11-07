@@ -1,2 +1,57 @@
-# Python virtual environment
+# Python general
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.so
+
+# Entornos virtuales
+venv/
+.env/
 env/
+*.env  # Si usas un archivo .env para variables de entorno
+
+# Archivos de configuración específicos del editor
+.vscode/
+.idea/
+
+# Archivos de dependencias y compilación
+*.egg-info/
+*.egg
+*.log
+*.bak
+*.swp
+dist/
+build/
+*.wheel
+
+# Base de datos y archivos de caché
+*.sqlite3
+*.db
+
+# Pytest y Coverage
+.pytest_cache/
+.cache/
+coverage/
+.coverage
+.coverage.*
+*.cover
+*.py,cover
+htmlcov/
+.tox/
+
+# Archivos de Docker
+docker-compose.override.yml
+*.pid
+
+# Configuración de Jupyter Notebook
+.ipynb_checkpoints
+
+# Archivos generados por Pre-commit
+.pre-commit-config.yaml~
+.pre-commit-config.yaml.bak
+
+# Otros
+.DS_Store  # macOS específico
+Thumbs.db  # Windows específico
