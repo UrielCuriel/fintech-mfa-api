@@ -6,3 +6,4 @@ sqlalchemy
 pydantic
 asyncpg
 pytest
+pre-commit
