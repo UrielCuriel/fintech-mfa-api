@@ -1,9 +1,0 @@
-fastapi
-uvicorn[standard]
-psycopg2-binary
-databases
-sqlalchemy
-pydantic
-asyncpg
-pytest
-pre-commit
