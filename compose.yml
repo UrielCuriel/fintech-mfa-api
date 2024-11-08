@@ -1,22 +1,52 @@
 services:
   app:
-    build: .
+    build: . 
+    command:
+      - fastapi
+      - run
+      - --reload
+      - "app/main.py"
+    develop:
+      watch:
+        - path: ./
+          action: sync
+          target: /app
+          ignore:
+            - .venv
+        - path: ./pyproject.toml
+          action: rebuild
     ports:
       - "8000:8000"
     depends_on:
       - db
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/postgres
+      - localstack
+    env_file:
+      - .env 
 
   db:
-    image: postgres:13
+    image: postgres:17
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+    environment:
+      # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+      - DEBUG=${DEBUG:-0}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./localstack/secretsmanager:/docker-entrypoint-initaws.d
+
 volumes:
   postgres_data:
+  localstack:
 

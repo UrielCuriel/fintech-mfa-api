@@ -3,8 +3,7 @@ repos:
     hooks:
       - id: run-pytest
         name: Run pytest
-        entry: pytest
-        args: ["--ignore=app/alembic"]
+        entry: pytest tests/
         language: system
         types: [python]
         stages: [pre-commit, pre-push]
