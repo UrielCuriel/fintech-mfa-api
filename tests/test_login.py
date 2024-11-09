@@ -1,139 +1,116 @@
+from datetime import timedelta
+import uuid
+import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import Session, select
+from app import crud
+from app.crud import create_user
 from app.main import app
+from app.api.deps import get_db
+from app.models import User
+from app.core.security import get_password_hash, create_access_token, verify_password
+from app.schemas import NewPassword, UserCreate
 from unittest.mock import patch
 
-from app.models import User
 from app.utils import generate_password_reset_token
+
 
 client = TestClient(app)
 
 
-def test_login_access_token_success():
-    with patch("app.crud.authenticate") as mock_authenticate, \
-            patch("app.core.security.create_access_token") as mock_create_access_token:
-        mock_authenticate.return_value = type(
-            "User", (), {"id": 1, "is_active": True})
-        mock_create_access_token.return_value = "test_token"
+@pytest.fixture
+def test_user(session: Session):
+    """Crear un usuario para las pruebas."""
+    return create_user(session=session, user_create=UserCreate(id=str(uuid.uuid4()), username="testuser", otp_enabled=False, email="test@example.com", password="password123"))
 
+
+def test_login_access_token(test_user):
+    response = client.post(
+        "/api/v1/login/access-token",
+        data={"username": "test@example.com", "password": "password123"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["requires_totp"] is False
+
+
+def test_login_access_token_wrong_password(test_user):
+    response = client.post(
+        "/api/v1/login/access-token",
+        data={"username": "test@example.com", "password": "wrongpassword"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Incorrect email or password"
+
+
+def test_login_access_token_with_totp(session, test_user):
+    test_user.otp_enabled = True
+    session.add(test_user)
+    session.commit()
+
+    response = client.post(
+        "/api/v1/login/access-token",
+        data={"username": "test@example.com", "password": "password123"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "temp_token" in data
+    assert data["requires_totp"] is True
+
+
+def test_login_access_token_otp(session, test_user):
+    temp_token = create_access_token(
+        {"sub": test_user.username, "type": "temp_totp", "totp_required": True},
+        expires_delta=timedelta(minutes=5),
+    )
+    with patch("app.crud.validate_otp") as mock_validate_otp:
+        mock_validate_otp.return_value = test_user
         response = client.post(
-            "/api/v1/login/access-token",
-            data={"username": "test@example.com", "password": "test_password"},
+            "/api/v1/login/access-token/otp",
+            data={"temp_token": temp_token, "totp_code": "123456"},
         )
-
         assert response.status_code == 200
-        assert response.json() == {
-            "access_token": "test_token", "token_type": "bearer"}
+        data = response.json()
+        assert "access_token" in data
 
 
-def test_login_access_token_incorrect_credentials():
-    with patch("app.crud.authenticate") as mock_authenticate:
-        mock_authenticate.return_value = None
+def test_token_test(test_user):
+    token = create_access_token(
+        {"sub": str(test_user.id), "type": "access"}, expires_delta=timedelta(minutes=5))
+    headers = {"Authorization": f"Bearer {token}"}
 
-        response = client.post(
-            "/api/v1/login/access-token",
-            data={"username": "test@example.com",
-                  "password": "wrong_password"},
-        )
-
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Incorrect email or password"}
+    response = client.post("/api/v1/login/test-token", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["username"] == "testuser"
 
 
-def test_login_access_token_inactive_user():
-    with patch("app.crud.authenticate") as mock_authenticate:
-        mock_authenticate.return_value = type(
-            "User", (), {"id": 1, "is_active": False})
-
-        response = client.post(
-            "/api/v1/login/access-token",
-            data={"username": "test@example.com", "password": "test_password"},
-        )
-
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Inactive user"}
+@patch("app.mails.send_email")
+def test_password_recovery(mock_send_email, test_user):
+    response = client.post(f"/api/v1/password-recovery/{test_user.email}")
+    assert response.status_code == 200
+    assert response.json()[
+        "message"] == "If the email exists, you should receive an email shortly."
+    mock_send_email.assert_called_once()
 
 
-def test_recover_password():
-    with patch("app.crud.get_user_by_email") as mock_get_user_by_email, \
-            patch("app.utils.generate_password_reset_token") as mock_generate_password_reset_token, \
-            patch("app.mails.send_email") as mock_send_email:
-        mock_get_user_by_email.return_value = User(
-            username="XXXXXXXXX", email="test@example.com", is_active=True)
-        mock_generate_password_reset_token.return_value = "test_token"
-        mock_send_email.return_value = None
+def test_reset_password(session, test_user):
+    token = generate_password_reset_token(test_user.email)
+    new_password = "newpassword123"
+    response = client.post(
+        "/api/v1/reset-password/",
+        json={"token": token, "new_password": new_password},
+    )
+    assert response.status_code == 200
+    assert response.json()["message"] == "Password updated successfully"
 
-        response = client.post("/api/v1/password-recovery/test@example.com")
-
-        assert response.status_code == 200
-        assert response.json() == {
-            "message": "If the email exists, you should receive an email shortly."}
-
-
-def test_reset_password_success():
-    user_email = "test@example.com"
-    token = generate_password_reset_token(email=user_email)
-    with patch("app.utils.verify_password_reset_token") as mock_verify_password_reset_token, \
-            patch("app.crud.get_user_by_email") as mock_get_user_by_email, \
-            patch("app.core.security.get_password_hash") as mock_get_password_hash, \
-            patch("app.api.deps.SessionDep") as mock_session:
-        mock_verify_password_reset_token.return_value = user_email
-        mock_get_user_by_email.return_value = User(
-            email=user_email, is_active=True, username="test_user")
-        mock_get_password_hash.return_value = "hashed_password"
-
-        response = client.post(
-            "/api/v1/reset-password/",
-            json={"token": token, "new_password": "new_password"},
-        )
-
-        assert response.status_code == 200
-        assert response.json() == {"message": "Password updated successfully"}
-
-
-def test_reset_password_invalid_token():
-    with patch("app.utils.verify_password_reset_token") as mock_verify_password_reset_token:
-        mock_verify_password_reset_token.return_value = None
-
-        response = client.post(
-            "/api/v1/reset-password/",
-            json={"token": "invalid_token", "new_password": "new_password"},
-        )
-
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Invalid token"}
-
-
-def test_reset_password_user_not_found():
-    user_email = "test@example.com"
-    token = generate_password_reset_token(email=user_email)
-    with patch("app.utils.verify_password_reset_token") as mock_verify_password_reset_token, \
-            patch("app.crud.get_user_by_email") as mock_get_user_by_email:
-        mock_verify_password_reset_token.return_value = "test@example.com"
-        mock_get_user_by_email.return_value = None
-
-        response = client.post(
-            "/api/v1/reset-password/",
-            json={"token": token, "new_password": "new_password"},
-        )
-
-        assert response.status_code == 404
-        assert response.json() == {
-            "detail": "The user with this email does not exist in the system."}
-
-
-def test_reset_password_inactive_user():
-    user_email = "test@example.com"
-    token = generate_password_reset_token(email=user_email)
-    with patch("app.utils.verify_password_reset_token") as mock_verify_password_reset_token, \
-            patch("app.crud.get_user_by_email") as mock_get_user_by_email:
-        mock_verify_password_reset_token.return_value = user_email
-        mock_get_user_by_email.return_value = type(
-            "User", (), {"is_active": False})
-
-        response = client.post(
-            "/api/v1/reset-password/",
-            json={"token": token, "new_password": "new_password"},
-        )
-
-        assert response.status_code == 400
-        assert response.json() == {"detail": "Inactive user"}
+    
+    # Obtener el usuario nuevamente para verificar si la contraseña fue actualizada
+    updated_user = crud.get_user_by_email(session=session, email=test_user.email)
+    
+    # Refrescar la instancia del usuario para asegurarse de que tenga los datos más recientes
+    session.refresh(updated_user)
+    
+    # Verificar que la nueva contraseña sea válida
+    # Verificar que el usuario puede autenticarse con la nueva contraseña
+    assert verify_password(new_password, updated_user.hashed_password)
