@@ -8,7 +8,7 @@ from app import crud
 from app.api.deps import SessionDep, get_current_user
 from app.core import security
 from app.core.config import settings
-
+from app.utils import generate_qr
 
 from app.models import User
 from app.schemas import Otp, UserPublic
@@ -37,11 +37,7 @@ def generate_qr_code(session: SessionDep, user: User = Depends(get_current_user)
     if user.otp_enabled:
         raise HTTPException(status_code=400, detail="OTP already enabled")
     crud.config_otp(session=session, db_user=user)
-    totp = pyotp.TOTP(user.otp_secret)
-    qr_code = pyqrcode.create(
-        totp.provisioning_uri(
-            name=user.email, issuer_name=settings.TOTP_ISSUER)
-    )
+    qr_code = generate_qr(user)
     img_byte_arr = io.BytesIO()
     qr_code.png(img_byte_arr, scale=5)
     img_byte_arr = img_byte_arr.getvalue()

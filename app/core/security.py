@@ -31,6 +31,7 @@ def get_password_hash(password: str) -> str:
 def generate_otp_secret() -> str:
     return pyotp.random_base32()
 
+
 def verify_otp(otp: Optional[str], secret: str) -> bool:
     totp = pyotp.TOTP(secret)
-    return totp.verify(otp)
+    return totp.verify(otp, valid_window=1)
