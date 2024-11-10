@@ -29,7 +29,6 @@ def upgrade():
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("is_superuser", sa.Boolean(), nullable=False),
         sa.Column("full_name", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
         sa.Column(
             "hashed_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False

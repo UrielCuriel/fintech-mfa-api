@@ -34,7 +34,7 @@ def token(current_user):
 def test_update_user_me(session, token):
     response = client.patch(
         f"{settings.API_V_STR}/users/me",
-        json={"email": "newemail@example.com"},
+        json={"email": "newemail@example.com", "full_name": "New Name"},
         headers={"Authorization": f"Bearer {token}"}
     )
     assert response.status_code == 200

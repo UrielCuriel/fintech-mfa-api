@@ -52,7 +52,7 @@ def login_access_token(
             settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = security.create_access_token(
             {
-                "sub": user.email,
+                "sub": str(user.id),
                 "type": "access",
                 "totp_required": False
             },
