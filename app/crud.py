@@ -66,7 +66,6 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
 
 def validate_otp(*, session: Session, email: str, totp_code: str) -> User | None:
     db_user = get_user_by_email(session=session, email=email)
-    print(db_user)
     if not db_user:
         return None
     if db_user.otp_enabled:

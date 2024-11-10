@@ -32,7 +32,5 @@ def generate_otp_secret() -> str:
     return pyotp.random_base32()
 
 def verify_otp(otp: Optional[str], secret: str) -> bool:
-    print(otp, secret)
     totp = pyotp.TOTP(secret)
-    print(totp.now(), otp)
     return totp.verify(otp)
