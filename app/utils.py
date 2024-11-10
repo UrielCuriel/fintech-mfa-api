@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+import pyqrcode
+from urllib.parse import quote
 
 import jwt
 from jinja2 import Template
@@ -37,3 +39,16 @@ def verify_password_reset_token(token: str) -> str | None:
         return str(decoded_token["sub"])
     except InvalidTokenError:
         return None
+    
+    
+def generate_qr(user):
+    secret = user.otp_secret
+    email = user.email
+    issuer = settings.TOTP_ISSUER
+    # Construye la URL manualmente
+    url_otp = (
+        f"otpauth://totp/{quote(issuer)}:{quote(email)}"
+        f"?secret={secret}&issuer={quote(issuer)}&algorithm=SHA1&digits=6&period=30"
+    )
+    qr_code = pyqrcode.create(url_otp)
+    return qr_code
