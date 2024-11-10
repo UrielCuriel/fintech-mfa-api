@@ -16,14 +16,7 @@ class Token(SQLModel):
 class TokenPayload(SQLModel):
     sub: str | None = None
 
-class TokenData(SQLModel):
-    username: str | None = None
-    email: EmailStr | None = None
-    
-
-
 class UserBase(SQLModel):
-    username: str
     email: EmailStr = Field(unique=True, index=True, max_length=255)
     is_active: bool = True
     is_superuser: bool = False
@@ -36,10 +29,23 @@ class UserPublic(UserBase):
 
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=40)
+    
+class UserRegister(SQLModel):
+    email: EmailStr = Field(max_length=255)
+    password: str = Field(min_length=8, max_length=40)
+    full_name: str | None = Field(default=None, max_length=255)
 
 class UserUpdate(SQLModel):
     email: EmailStr | None = Field(default=None, max_length=255)
     password: str | None = Field(default=None, min_length=8, max_length=40)
+    
+class UpdatePassword(SQLModel):
+    current_password: str = Field(min_length=8, max_length=40)
+    new_password: str = Field(min_length=8, max_length=40)
+    
+class UserUpdateMe(SQLModel):
+    full_name: str | None = Field(default=None, max_length=255)
+    email: EmailStr | None = Field(default=None, max_length=255)
 
 class Message(SQLModel):
     message: str

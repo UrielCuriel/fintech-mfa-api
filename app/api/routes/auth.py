@@ -5,7 +5,7 @@ import pyqrcode
 from fastapi import APIRouter, Depends, HTTPException, Response, logger
 
 from app import crud
-from app.api.deps import CurrentUser, SessionDep, get_current_user
+from app.api.deps import SessionDep, get_current_user
 from app.core import security
 
 
@@ -13,6 +13,7 @@ from app.models import User
 from app.schemas import Otp, UserPublic
 
 router = APIRouter()
+
 
 @router.put("/auth/otp/enable")
 async def otp_enable(session: SessionDep, user: User = Depends(get_current_user)):
@@ -29,7 +30,7 @@ async def otp_enable(session: SessionDep, user: User = Depends(get_current_user)
 def generate_qr_code(user: User = Depends(get_current_user)):
     totp = pyotp.TOTP(user.otp_secret)
     qr_code = pyqrcode.create(
-        totp.provisioning_uri(name=user.username, issuer_name="Fintech APP")
+        totp.provisioning_uri(name=user.email, issuer_name="Fintech APP")
     )
     img_byte_arr = io.BytesIO()
     qr_code.png(img_byte_arr, scale=5)

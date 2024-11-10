@@ -21,7 +21,7 @@ client = TestClient(app)
 @pytest.fixture
 def test_user(session: Session):
     """Crear un usuario para las pruebas."""
-    return create_user(session=session, user_create=UserCreate(id=str(uuid.uuid4()), username="testuser", otp_enabled=False, email="test@example.com", password="password123"))
+    return create_user(session=session, user_create=UserCreate(id=str(uuid.uuid4()), otp_enabled=False, email="test@example.com", password="password123"))
 
 
 def test_login_access_token(test_user):
@@ -61,7 +61,7 @@ def test_login_access_token_with_totp(session, test_user):
 
 def test_login_access_token_otp(session, test_user):
     temp_token = create_access_token(
-        {"sub": test_user.username, "type": "temp_totp", "totp_required": True},
+        {"sub": test_user.email, "type": "temp_totp", "totp_required": True},
         expires_delta=timedelta(minutes=5),
     )
     with patch("app.crud.validate_otp") as mock_validate_otp:
@@ -82,7 +82,7 @@ def test_token_test(test_user):
 
     response = client.post("/api/v1/login/test-token", headers=headers)
     assert response.status_code == 200
-    assert response.json()["username"] == "testuser"
+    assert response.json()["email"] == "test@example.com"
 
 
 @patch("app.mails.send_email")

@@ -18,12 +18,12 @@ client = TestClient(app)
 
 # Mock para obtener el usuario actual sin OTP habilitado
 def mock_get_current_user_otp_disabled(session):
-    return create_user(session=session, user_create=UserCreate(id=str(uuid.uuid4()), username="testuser", otp_enabled=False, email="test@example.com", password="password123"))
+    return create_user(session=session, user_create=UserCreate(id=str(uuid.uuid4()), otp_enabled=False, email="test@example.com", password="password123"))
 
 
 # Mock para obtener el usuario actual con OTP habilitado
 def mock_get_current_user_otp_enabled(session):
-    return create_user(session=session, user_create=UserCreate(id=str(uuid.uuid4()), username="testuser", otp_enabled=True, email="test@example.com", password="password123"))
+    return create_user(session=session, user_create=UserCreate(id=str(uuid.uuid4()), otp_enabled=True, email="test@example.com", password="password123"))
 
 
 # Mock para habilitar OTP
