@@ -73,3 +73,27 @@ def test_generate_qr_code(session):
     assert response.headers["content-type"] == "image/png"
     assert isinstance(response.content, bytes)
     assert len(response.content) > 0
+    
+# Test para verificar OTP exitoso
+@patch("app.api.deps.get_current_user", mock_get_current_user_otp_enabled)
+@patch("app.core.security.verify_otp", return_value=True)
+def test_verify_otp_success(mock_verify_otp, session):
+    user = mock_get_current_user_otp_enabled(session)
+    headers = get_auth_headers(user)
+    response = client.post("/api/v1/auth/otp/verify", headers=headers, json={"totp_code": "123456"})
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["message"] == "OTP verified"
+    mock_verify_otp.assert_called_once_with("123456", user.otp_secret)
+
+
+# Test para verificar OTP fallido
+@patch("app.api.deps.get_current_user", mock_get_current_user_otp_enabled)
+@patch("app.core.security.verify_otp", return_value=False)
+def test_verify_otp_failure(mock_verify_otp, session):
+    user = mock_get_current_user_otp_enabled(session)
+    headers = get_auth_headers(user)
+    response = client.post("/api/v1/auth/otp/verify", headers=headers, json={"totp_code": "123456"})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Invalid OTP"
+    mock_verify_otp.assert_called_once_with("123456", user.otp_secret)
+
