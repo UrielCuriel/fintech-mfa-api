@@ -26,7 +26,9 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build the Docker image
-        run: docker build . - tag ${{ steps.login-ecr.outputs.registry }}/admin:${{ env.PIPELINE_ID }} - tag ${{ steps.login-ecr.outputs.registry }}/admin:latest
+        run: docker build . \
+          --tag ${{ steps.login-ecr.outputs.registry }}/admin:${{ env.PIPELINE_ID }} \
+          --tag ${{ steps.login-ecr.outputs.registry }}/admin:latest
 
       - name: Push the Docker image to Amazon ECR
         run: docker push - all-tags ${{ steps.login-ecr.outputs.registry }}/admin
