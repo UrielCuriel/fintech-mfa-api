@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Optional
 
 import jwt
 from passlib.context import CryptContext
+import pyotp
 
 from app.core.config import settings
 
@@ -12,10 +13,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = "HS256"
 
 
-def create_access_token(subject: str | Any, expires_delta: timedelta) -> str:
+def create_access_token(data: dict | Any, expires_delta: timedelta) -> str:
     expire = datetime.now(timezone.utc) + expires_delta
-    to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    data.update({"exp": expire})
+    encoded_jwt = jwt.encode(data, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -26,3 +27,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
+
+def generate_otp_secret() -> str:
+    return pyotp.random_base32()
+
+def verify_otp(otp: Optional[str], secret: str) -> bool:
+    print(otp, secret)
+    totp = pyotp.TOTP(secret)
+    print(totp.now(), otp)
+    return totp.verify(otp)

@@ -12,6 +12,7 @@ venv/
 env/
 *.env  # Si usas un archivo .env para variables de entorno
 .env
+.env.test
 
 # Archivos de configuración específicos del editor
 .vscode/

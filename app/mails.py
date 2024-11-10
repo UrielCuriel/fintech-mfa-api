@@ -31,6 +31,12 @@ def send_email(template_key, recipients, personalization_data, subject):
     if not template_id:
         raise ValueError(f"Template '{template_key}' no encontrado en el diccionario de templates.")
 
+    print("----------------------------------------")
+    print(f"Enviando correo con template '{template_key}'")
+    print(f"Destinatarios: {recipients}")
+    print(f"Asunto: {subject}")
+    print(f"Personalización: {personalization_data}")
+    print("----------------------------------------")
     # Configurar los parámetros del correo
     mailer.set_mail_from(mail_from, mail_body)
     mailer.set_mail_to(recipients, mail_body)

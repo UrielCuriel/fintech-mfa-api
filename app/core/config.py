@@ -42,7 +42,6 @@ class Settings(BaseSettings):
     # Configuración de Pydantic
     # ---------------------------
     model_config = SettingsConfigDict(
-        env_file="../../.env",
         env_ignore_empty=True,
         extra="ignore",
     )
@@ -61,9 +60,14 @@ class Settings(BaseSettings):
     # ---------------------------
     SECRET_KEY: str = secrets.token_urlsafe(32)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 días de duración
+    TEMP_TOKEN_EXPIRE_MINUTES: int = 5  # 5 minutos de duración
     FRONTEND_HOST: str = "http://localhost:3000"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
-
+    
+    # ---------------------------
+    # Configuración de TOTP
+    # ---------------------------
+    TOTP_ISSUER: str = "Fintech API"
     # ---------------------------
     # Configuración de CORS
     # ---------------------------
