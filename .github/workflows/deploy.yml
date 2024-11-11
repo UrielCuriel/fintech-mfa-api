@@ -67,6 +67,13 @@ jobs:
     - name: Generate deployment package
       run: zip deploy.zip Dockerrun.aws.json
 
+    - name: Set Version Label
+      run: |
+        # Obtener el último tag
+        GIT_TAG=$(git describe --tags --abbrev=0 || echo 'v0.0.0')
+        # Combinar con el run number
+        echo "VERSION_LABEL=${GIT_TAG}-run${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+
     - name: Deploy to AWS Elastic BeanTalk
       uses: einaregilsson/beanstalk-deploy@v20
       with:
@@ -74,7 +81,7 @@ jobs:
         aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         application_name: fintech-api
         environment_name: fintech-api-env
-        version_label: ${{ env.PIPELINE_ID }}
+        version_label: ${{ env.VERSION_LABEL }}
         use_existing_version_if_available: true
         region: ${{ secrets.AWS_REGION }}
         deployment_package: deploy.zip
