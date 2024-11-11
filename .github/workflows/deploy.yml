@@ -8,7 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: ${{ vars.ENVIRONMENT_STAGE }}
+    environment: prod
+    env:
+      PIPELINE_ID: ${{ github.sha }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -26,9 +28,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build the Docker image
-        run: docker build . \
-          --tag ${{ steps.login-ecr.outputs.registry }}/admin:${{ env.PIPELINE_ID }} \
-          --tag ${{ steps.login-ecr.outputs.registry }}/admin:latest
+        run: docker build . -t ${{ steps.login-ecr.outputs.registry }}/admin:${{ env.PIPELINE_ID }} -t ${{ steps.login-ecr.outputs.registry }}/admin:latest
 
       - name: Push the Docker image to Amazon ECR
         run: docker push - all-tags ${{ steps.login-ecr.outputs.registry }}/admin
