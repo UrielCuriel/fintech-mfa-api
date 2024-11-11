@@ -150,7 +150,7 @@ class Settings(BaseSettings):
     # ---------------------------
     # Configuración de AWS (si es necesario)
     # ---------------------------
-    AWS_ENDPOINT_URL: str = None
+    AWS_ENDPOINT_URL: str = ""
     AWS_REGION: str = "us-east-1"
 
     def get_secret_from_aws(self, secret_name: str) -> str:
