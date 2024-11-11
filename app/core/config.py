@@ -160,10 +160,11 @@ class Settings(BaseSettings):
         session = boto3.session.Session()
         client_params = {
             "service_name": "secretsmanager",
+            "region_name": self.AWS_REGION,
         }
         if self.AWS_ENDPOINT_URL:
             client_params["endpoint_url"] = self.AWS_ENDPOINT_URL
-            client_params["region_name"] = self.AWS_REGION
+            
 
         client = session.client(**client_params)
 
