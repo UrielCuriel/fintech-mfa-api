@@ -31,7 +31,7 @@ jobs:
         run: docker build . -t ${{ steps.login-ecr.outputs.registry }}/admin:${{ env.PIPELINE_ID }} -t ${{ steps.login-ecr.outputs.registry }}/admin:latest
 
       - name: Push the Docker image to Amazon ECR
-        run: docker push - all-tags ${{ steps.login-ecr.outputs.registry }}/admin
+        run: docker push --all-tags ${{ steps.login-ecr.outputs.registry }}/admin
   deploy:
     needs: build
     runs-on: ubuntu-latest
