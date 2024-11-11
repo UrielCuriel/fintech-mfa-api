@@ -1,11 +1,18 @@
 from sqlmodel import Session, create_engine, select
+from sqlalchemy.pool import QueuePool
 
-from app import crud
-from app.core.config import settings
-from app.models import User
-from app.schemas import UserCreate
-
-engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
+engine = create_engine(
+    str(settings.SQLALCHEMY_DATABASE_URI),
+    echo=False,
+    # Configuración necesaria para evitar desconexiones en producción ya que
+    # Neon cierra las conexiones después de un tiempo de inactividad
+    poolclass=QueuePool,
+    pool_size=5,              # Número máximo de conexiones en el pool
+    max_overflow=10,          # Conexiones adicionales si el pool está lleno
+    pool_timeout=30,          # Tiempo máximo para esperar una conexión libre
+    pool_recycle=1800,        # Tiempo (en segundos) para reciclar conexiones y evitar desconexiones
+    pool_pre_ping=True        # Verifica si la conexión es válida antes de usarla
+)
 
 
 # make sure all SQLModel models are imported (app.models) before initializing DB
