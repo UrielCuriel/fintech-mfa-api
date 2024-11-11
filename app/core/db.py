@@ -1,4 +1,5 @@
 from sqlmodel import Session, create_engine, select
+from app.core.config import settings
 from sqlalchemy.pool import QueuePool
 
 engine = create_engine(
