@@ -28,10 +28,10 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build the Docker image
-        run: docker build . -t ${{ steps.login-ecr.outputs.registry }}/admin:${{ env.PIPELINE_ID }} -t ${{ steps.login-ecr.outputs.registry }}/admin:latest
+        run: docker build . -t ${{ steps.login-ecr.outputs.registry }}/${{secrets.ECR_REPOSITORY}}:${{ env.PIPELINE_ID }} -t ${{ steps.login-ecr.outputs.registry }}/${{secrets.ECR_REPOSITORY}}:latest
 
       - name: Push the Docker image to Amazon ECR
-        run: docker push --all-tags ${{ steps.login-ecr.outputs.registry }}/admin
+        run: docker push --all-tags ${{ steps.login-ecr.outputs.registry }}/${{secrets.ECR_REPOSITORY}}
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -39,6 +39,30 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v3
+
+    - name: Generate Dockerrun.aws.json
+      run: |
+        cat > Dockerrun.aws.json << EOF
+        {
+          "AWSEBDockerrunVersion": "1",
+          "Image": {
+            "Name": "${{ steps.login-ecr.outputs.registry }}/${{secrets.ECR_REPOSITORY}}:latest",
+            "Update": "true"
+          },
+          "Ports": [
+            {
+              "ContainerPort": 8000,
+              "HostPort": 80
+            }
+          ],
+          "Environment": [
+            {
+              "Name": "PORT",
+              "Value": "8000"
+            }
+          ]
+        }
+        EOF
 
     - name: Generate deployment package
       run: zip deploy.zip Dockerrun.aws.json
