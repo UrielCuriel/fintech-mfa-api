@@ -79,11 +79,7 @@ jobs:
       run: zip deploy.zip Dockerrun.aws.json
 
     - name: Set Version Label
-      run: |
-        # Obtener el último tag
-        echo "GIT_TAG=`echo $(git describe --tags --abbrev=0)`" >> $GITHUB_ENV
-        # Combinar con el run number
-        echo "VERSION_LABEL=${GIT_TAG}-${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+      run: echo "VERSION_LABEL=fintech-api-${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
 
     - name: Deploy to AWS Elastic BeanTalk
       uses: einaregilsson/beanstalk-deploy@v20
