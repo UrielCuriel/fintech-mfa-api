@@ -1,0 +1,33 @@
+config:
+  target: "http://localhost:8000"  # Cambia esto por la URL de tu API
+  phases:
+    - duration: 60  # Duración de la prueba en segundos
+      arrivalRate: 20  # Solicitudes por segundo
+  defaults:
+    headers:
+      Origin: "http://example.com"  # Cambia esto para probar CORS
+
+scenarios:
+  # Prueba para el endpoint /api/v1/login/access-token
+  - flow:
+      - post:
+          url: "/api/v1/login/access-token"
+          headers:
+            Content-Type: "application/x-www-form-urlencoded"
+          form:
+            username: "iam@urielcuriel.dev"
+            password: "Se es o no se eS"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      - log: "Login realizado con éxito, token capturado: {{ token }}"
+
+  # Prueba para verificar CORS
+  - flow:
+      - get:
+          url: "/api/v1/openapi.json"  # Cambia esta ruta para probar CORS
+          headers:
+            Origin: "http://not-allowed-origin.com"
+          validate:
+            statusCode: 403  # Verifica que responda con un error CORS si el origen no está permitido
+      - log: "CORS verificado"

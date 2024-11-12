@@ -4,6 +4,9 @@ from typing import Any, Optional
 import jwt
 from passlib.context import CryptContext
 import pyotp
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
 
 from app.core.config import settings
 
@@ -35,3 +38,7 @@ def generate_otp_secret() -> str:
 def verify_otp(otp: Optional[str], secret: str) -> bool:
     totp = pyotp.TOTP(secret)
     return totp.verify(otp, valid_window=1)
+
+# Crear una instancia de Limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=["10/minute"])
+

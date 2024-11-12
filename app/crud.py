@@ -62,7 +62,6 @@ def enable_otp(*, session: Session, db_user: User) -> User:
     session.refresh(db_user)
     return db_user
 
-
 def get_otp_user_by_email(*, session: Session, email: str) -> User | None:
     statement = select(User).where(User.email == email)
     session_user = session.exec(statement).first()

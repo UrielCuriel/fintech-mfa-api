@@ -1,9 +1,13 @@
 from datetime import timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Form, HTTPException, logger
+from fastapi import APIRouter, Depends, Form, HTTPException, logger, Request
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
+
+from slowapi.errors import RateLimitExceeded
+from app.core.security import limiter
+
 import jwt
 from sqlmodel import SQLModel
 
@@ -30,8 +34,10 @@ class TOTPValidationRequest(SQLModel):
 
 
 @router.post("/login/access-token")
+@limiter.limit("5/minute")
 def login_access_token(
     session: SessionDep,
+    request: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
     """
@@ -85,8 +91,10 @@ def login_access_token(
 
 
 @router.post("/login/access-token/otp")
+@limiter.limit("5/minute")
 def login_access_token_otp(
     session: SessionDep,
+    request: Request,
     temp_token: Annotated[str, Form()], totp_code: Annotated[str, Form()]
 ) -> Token:
     """

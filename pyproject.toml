@@ -26,6 +26,7 @@ dependencies = [
     "pyotp>=2.9.0",
     "pyqrcode>=1.2.1",
     "pypng>=0.20220715.0",
+    "slowapi>=0.1.9",
 ]
 
 [tool.uv]

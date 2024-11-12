@@ -8,6 +8,9 @@ from app.api.deps import CurrentUser, SessionDep
 from app.core import security
 from app.schemas import Message, UpdatePassword, UserCreate, UserPublic, UserRegister, UserUpdateMe
 
+from slowapi.errors import RateLimitExceeded
+from app.core.security import limiter
+
 router = APIRouter()
 
 
