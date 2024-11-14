@@ -76,10 +76,18 @@ fintech-mfa-api/
 
 Este proyecto utiliza PostgreSQL como base de datos. La configuración de la base de datos se encuentra en el archivo `app/core/db.py`.
 
+por defecto la base definida en el docker compose es la de postgres, para cambiar la base de datos se debe modificar el archivo `.env` y cambiar las variables de entorno `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` dentro del `compose.yml`
+
 Para crear la base de datos, ejecuta el siguiente comando:
 
 ```bash
-docker compose exec api alembic upgrade head
+docker compose exec app alembic upgrade head
+```
+
+para los test se usa la base de datos `test` la cual se debe crear con el siguiente comando:
+
+```bash
+docker compose exec db psql -U postgres -c "CREATE DATABASE test"
 ```
 
 ## API Endpoints
@@ -104,6 +112,16 @@ La API proporciona los siguientes endpoints principales:
 Para más detalles, consulta la documentación interactiva en `/docs` o visitando la documentación más detallada en [fintech Docs](https://fintech-docs.urielcuriel.com/)
 
 ## Tests
+
+Para configurar el entorno de pruebas, se debe crear un `.env.test` en la raíz del proyecto, se puede utilizar el archivo `.env.example` como referencia.
+
+se debe usar la base de datos `test` para los tests, por lo cual se debe configurar la base de datos en el archivo `.env.test`
+
+```bash
+POSTGRES_USER= # Usuario de la base de datos
+POSTGRES_PASSWORD= # Contraseña de la base de datos
+POSTGRES_DB=test
+```
 
 Para ejecutar los tests:
 
