@@ -1,7 +1,5 @@
 # Fintech MFA API
 
-Este es un proyecto backend de prueba para la empresa [Creze](https://creze.com/), para la posición de desarrollador fullstack.
-
 ## Descripción
 
 El objetivo principal de este proyecto es crear una aplicación web que permita a los usuarios registrarse, iniciar sesión utilizando MFA (Multi-Factor Authentication) y ver su perfil. Orientando principalmente a la seguridad de los datos de los usuarios.
